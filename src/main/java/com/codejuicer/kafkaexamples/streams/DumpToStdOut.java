@@ -20,7 +20,7 @@ public class DumpToStdOut {
         props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass());
 
         final StreamsBuilder builder = new StreamsBuilder();
-        builder.stream("simple-input")
+        builder.stream("test")
                 .foreach((key, value) ->
                         System.out.printf("Key: %s  Value: %s\n", key, value)
                 );
