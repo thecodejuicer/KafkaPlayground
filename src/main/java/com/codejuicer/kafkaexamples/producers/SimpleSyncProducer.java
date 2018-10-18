@@ -1,7 +1,8 @@
-package com.codejuicer.kafkaexamples;
+package com.codejuicer.kafkaexamples.producers;
 
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.streams.StreamsConfig;
 
 import java.io.BufferedReader;
@@ -9,10 +10,10 @@ import java.io.InputStreamReader;
 import java.util.Properties;
 
 /**
- * This is a very simple producer that publishes to the "test" topic. It reads input from the console
+ * This is a synchronized producer that publishes to the "test" topic. It reads input from the console
  * and publishes it to the topic until the user types "stop!" (case insensitive).
  */
-public class SimpleProducer {
+public class SimpleSyncProducer {
     public static void main(String[] args) {
         Properties kafkaProperties = new Properties();
         // Set the three required properties
@@ -20,8 +21,9 @@ public class SimpleProducer {
         kafkaProperties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         kafkaProperties.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
 
-        // 
+        // Hey look, it's a producer.
         KafkaProducer<String, String> producer;
+        // This will be the record the producer sends.
         ProducerRecord<String, String> record;
         
         BufferedReader messageReader;
@@ -36,26 +38,32 @@ public class SimpleProducer {
             System.out.print(":> ");
             // Start an input loop. Type "stop!" to end it all.
             while(null != (message = messageReader.readLine())) {
-                System.out.print(":> ");
                 
                 // Good bye. This is where the road ends.
                 if("stop!".equals(message.toLowerCase())) {
-                    System.out.println("Bye.\n");
+                    System.out.println("Bye.");
                     break;
                 }
                 
                 // Ignore empty strings
-                if(message.trim().isEmpty()) continue;
-                
-                // Oh. There was a message? Instantiate a record with the message and send it.
-                // This doesn't wait for any kind of response. It doesn't care. "Fire and forget"
-                try {
-                    record = new ProducerRecord<>("test", message);
-                    producer.send(record);
-                } catch(Exception e) {
-                    // Simple message printing here. We don't want to terminate.
-                    e.printStackTrace();
+                if(!message.trim().isEmpty()) {
+
+                    // Oh. There was a message? Instantiate a record with the message and send it.
+                    // This doesn't wait for any kind of response. It doesn't care. "Fire and forget"
+                    try {
+                        record = new ProducerRecord<>("test", message);
+                        System.out.println("Sending the message...");
+                        // Use ".get()" to retrieve a metadata Future. This is a blocking call.
+                        RecordMetadata meta = producer.send(record).get();
+                        System.out.println("Result: " + meta.toString());
+
+                    } catch (Exception e) {
+                        // Simple message printing here. We don't want to terminate.
+                        e.printStackTrace();
+                    }
                 }
+
+                System.out.print(":> ");
             }
         } catch(Exception e) {
             e.printStackTrace();
