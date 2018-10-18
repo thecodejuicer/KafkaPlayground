@@ -49,7 +49,6 @@ public class SimpleSyncProducer {
                 if(!message.trim().isEmpty()) {
 
                     // Oh. There was a message? Instantiate a record with the message and send it.
-                    // This doesn't wait for any kind of response. It doesn't care. "Fire and forget"
                     try {
                         record = new ProducerRecord<>("test", message);
                         System.out.println("Sending the message...");
